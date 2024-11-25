@@ -1,5 +1,5 @@
 from gousto_scraper.types import RecipeLink, RecipeInfo
-from gousto_scraper.constants import GET_RECIPES_ENDPOINT, GET_RECIPES_PAGE_LIMIT, IMAGE_WIDTH
+from gousto_scraper.constants import GET_RECIPES_ENDPOINT, GET_RECIPES_PAGE_LIMIT, IMAGE_WIDTH, GET_RECIPE_INFO_ENDPOINT
 from gousto_scraper.errors import NoMoreRecipesError
 from gousto_scraper.utils import page_to_offset
 import aiohttp
@@ -95,3 +95,29 @@ async def get_all_recipes(max_concurrent_requests=5):
             break
 
     return all_recipes
+
+async def get_recipe_info(url: str) -> RecipeInfo:
+    """
+    Takes a recipe url and returns a RecipeInfo object
+
+    Args:
+        url: The url of the recipe to scrape. Is in the format returned by get_recipe_links_from_page, which is of the form "/recipes/{recipe_name}"
+
+    Raises:
+        aiohttp.ClientResponseError: If the response status code is not 200.
+    """
+
+
+    api_url = f"{GET_RECIPE_INFO_ENDPOINT}{url}"
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api_url) as response:
+            if response.status != 200:
+                raise aiohttp.ClientResponseError(
+                    request_info=response.request_info,
+                    history=response.history,
+                    status=response.status,
+                    message=f"HTTP error occurred: {response.status}"
+                )
+            
+            data = await response.json()
+            return data
