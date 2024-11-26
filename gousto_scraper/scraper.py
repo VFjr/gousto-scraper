@@ -1,7 +1,7 @@
 from gousto_scraper.types import RecipeLink, RecipeInfo
 from gousto_scraper.constants import GET_RECIPES_ENDPOINT, GET_RECIPES_PAGE_LIMIT, IMAGE_WIDTH, GET_RECIPE_INFO_ENDPOINT
 from gousto_scraper.errors import NoMoreRecipesError
-from gousto_scraper.utils import page_to_offset
+from gousto_scraper.utils import page_to_offset, strip_recipes_prefix
 import aiohttp
 import asyncio
 import json
@@ -106,8 +106,6 @@ async def get_recipe_info(url: str) -> RecipeInfo:
     Raises:
         aiohttp.ClientResponseError: If the response status code is not 200.
     """
-
-
     api_url = f"{GET_RECIPE_INFO_ENDPOINT}{url}"
     async with aiohttp.ClientSession() as session:
         async with session.get(api_url) as response:
@@ -121,3 +119,29 @@ async def get_recipe_info(url: str) -> RecipeInfo:
             
             data = await response.json()
             return data
+        
+async def get_recipe_info_from_link(url: str) -> RecipeInfo:
+    url = strip_recipes_prefix(url)
+    print(f"stripped_url: {url}")
+
+    api_url = f"{GET_RECIPE_INFO_ENDPOINT}{url}"
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(api_url) as response:
+            if response.status != 200:
+                raise aiohttp.ClientResponseError(
+                    request_info=response.request_info,
+                    history=response.history,
+                    status=response.status,
+                    message=f"HTTP error occurred: {response.status}"
+                )
+            
+            data = await response.json()
+            
+            ingredients = [ingredient["label"] for ingredient in data["entry"]["ingredients"]]
+
+            recipe_info = RecipeInfo(ingredients=ingredients)
+            return recipe_info
+    
+    
+    
