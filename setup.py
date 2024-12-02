@@ -11,6 +11,9 @@ setup(
     author_email='victor.florea.jr@gmail.com',
     license='MIT',
     packages=find_packages(),
+    install_requires=[
+        'aiohttp>=3.8.0'
+    ],
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
