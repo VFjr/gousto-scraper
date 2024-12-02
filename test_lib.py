@@ -1,19 +1,17 @@
-import gousto_scraper
+import json
+import os
 import asyncio
+import gousto_scraper
+    
+FILE_PATH = os.path.join(os.path.dirname(__file__), 'recipe_urls.json')
 
 async def main():
-    #recipe_links = await gousto_scraper.get_all_recipes(max_concurrent_requests=20)
-    #recipe_links = await gousto_scraper.get_recipe_links_from_page(180)
-    #print(recipe_links)
-    #recipe_info = await gousto_scraper.get_recipe_info("/recipes/copy-of-homemade-chicken-goujons-cheesy-beans")
-    #print(recipe_info)
-    recipe_links = await gousto_scraper.get_all_recipes(max_concurrent_requests=20)
-    with open("recipe_links.txt", "w") as file:
-        for recipe in recipe_links:
-            file.write(f"Name: {recipe.name}\n")
-            file.write(f"URL: {recipe.url}\n")
-            file.write("\n")
+    recipe_urls = await gousto_scraper.get_all_recipes(max_concurrent_requests=20)
+    # Convert RecipeLink objects to dictionaries
+    recipe_dicts = [recipe.to_dict() for recipe in recipe_urls]
+    with open(FILE_PATH, 'w') as f:
+        json.dump(recipe_dicts, f)
+    print(f'Successfully saved {len(recipe_urls)} recipes to {FILE_PATH}')
 
-
-asyncio.run(main())
-
+if __name__ == '__main__':
+    asyncio.run(main())
